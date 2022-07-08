@@ -23,6 +23,7 @@ int sec = date[5][0]; //초기 sec
 int memory[3][6];
 
 int memoBtnPin = 11; //누르면 시간 기록!
+int memoBtnLev;
             
 void setup(){
   lcd.init();
@@ -33,6 +34,8 @@ void setup(){
   pinMode(setBtnPin, INPUT_PULLUP);
   pinMode(changeBtnPin, INPUT_PULLUP);
   pinMode(memoBtnPin, INPUT_PULLUP);
+
+  memoBtnLev = digitalRead(memoBtnPin);
 }
 
 void loop(){
@@ -55,7 +58,7 @@ void loop(){
 //시간 기록
 void memo() {
   int memoBtn = digitalRead(memoBtnPin);
-  if (!memoBtn) {
+  if ((memoBtnLev != memoBtn) && memoBtn) {
     int memory0Size = sizeof(memory[0]) / sizeof(int);
     int memorySize = sizeof(memory) / sizeof(int) / memory0Size;
 
@@ -77,9 +80,10 @@ void memo() {
         if(memory[i][0]) lcdPrint(String(memory[i][k]), date[k][1], i + 1);
       }
     }
-
     delay(300);
   }
+
+  memoBtnLev = memoBtn;
 }
 
 //설정 들어가기
