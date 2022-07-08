@@ -1,6 +1,6 @@
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 extern volatile unsigned long timer0_millis;
 unsigned long t;
@@ -20,7 +20,7 @@ int date[6][2] = {{ 2022, 0 }, //year (시간, 위치)
                   { 00, 17 } }; //second
                   
 int sec = date[5][0]; //초기 sec
-int memory[10];
+int memory[3][6];
 
 int memoBtnPin = 11; //누르면 시간 기록!
             
@@ -52,15 +52,33 @@ void loop(){
 
 }
 
+//시간 기록
 void memo() {
   int memoBtn = digitalRead(memoBtnPin);
   if (!memoBtn) {
-    int memorySize = sizeof(memory) / sizeof(int);
+    int memory0Size = sizeof(memory[0]) / sizeof(int);
+    int memorySize = sizeof(memory) / sizeof(int) / memory0Size;
 
-    for (int i = 0; i < memorySize; i ++) {
-      if (!memory[i]) memory[i] = 1; break;
+    //이전의 기록들 한 칸씩 미루기
+    for (int i = memorySize - 1; i > 0; i --) {
+      for (int k = 0; k < memory0Size; k ++) {
+        memory[i][k] = memory[i - 1][k];
+      }
     }
-    
+
+    //새 기록
+    for (int k = 0; k < memory0Size; k ++) {
+      memory[0][k] = date[k][0];
+    }
+
+    //LCD에 표시
+    for (int i = 0; i < memorySize; i ++) {
+      for (int k = 0; k < memory0Size; k ++) {
+        if(memory[i][0]) lcdPrint(String(memory[i][k]), date[k][1], i + 1);
+      }
+    }
+
+    delay(300);
   }
 }
 
@@ -197,9 +215,7 @@ void lcdPrint(String str, int x, int y) { //LCD에 글자 쓰기
 
   if (str != ":" && str != "-" && str.length() < 2) str = "0" + str;
 
-  for (int i = 0; i < str.length(); i ++) {
-    lcd.setCursor(x + i, y);
-    lcd.print(str[i]);
-  }
+  lcd.setCursor(x, y);
+  lcd.print(str);
   
 }
